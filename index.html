@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anyflow — Built Different</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --green:#7FFF00;
+  --green-dark:#5acc00;
+  --black:#000000;
+  --white:#ffffff;
+  --bg-light:#ebebeb;
+  --font-heading:'Anton',sans-serif;
+  --font-body:'Inter',sans-serif;
+}
+html{overflow-x:hidden;scroll-behavior:auto;}
+body{
+  background:var(--black);
+  color:var(--white);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+  cursor:none;
+}
+
+/* CURSOR */
+#cursor-dot{
+  position:fixed;width:10px;height:10px;
+  background:var(--green);border-radius:50%;
+  pointer-events:none;z-index:99999;
+  transform:translate(-50%,-50%);
+  mix-blend-mode:difference;
+  transition:width .2s,height .2s;
+}
+#cursor-ring{
+  position:fixed;width:38px;height:38px;
+  border:1.5px solid rgba(127,255,0,0.6);
+  border-radius:50%;pointer-events:none;
+  z-index:99998;transform:translate(-50%,-50%);
+  transition:width .3s,height .3s,border-color .3s;
+}
+body.light-mode #cursor-dot{background:var(--black);mix-blend-mode:normal;}
+body.light-mode #cursor-ring{border-color:rgba(0,0,0,0.35);}
+
+/* CUSTOM SCROLLBAR */
+.scrollbar-track{
+  position:fixed;right:0;top:0;bottom:0;
+  width:3px;background:rgba(255,255,255,0.06);
+  z-index:9990;
+}
+.scrollbar-thumb{
+  position:absolute;width:3px;right:0;top:0;
+  background:var(--white);border-radius:2px;
+  transition:background .3s;
+}
+body.light-mode .scrollbar-thumb{background:rgba(0,0,0,0.35);}
+
+/* ===== FLOATING NAV ===== */
+#floating-nav{
+  position:fixed;bottom:26px;left:50%;
+  transform:translateX(-50%);
+  z-index:8000;
+  background:#111111;
+  border-radius:100px;
+  display:flex;align-items:stretch;
+  overflow:hidden;
+  box-shadow:0 8px 48px rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.07);
+  min-width:320px;
+}
+.fnav-menu{
+  display:flex;align-items:center;gap:10px;
+  padding:13px 22px;color:var(--white);
+  font-family:var(--font-body);font-size:14px;
+  font-weight:500;cursor:none;background:none;
+  border:none;letter-spacing:0.01em;
+  transition:opacity .2s;
+}
+.fnav-menu:hover{opacity:0.8;}
+.fnav-hamburger{
+  display:flex;flex-direction:column;gap:3.5px;
+  background:var(--green);padding:7px 8px;
+  border-radius:6px;flex-shrink:0;
+}
+.fnav-hamburger span{
+  display:block;width:14px;height:1.5px;
+  background:var(--black);border-radius:1px;
+}
+.fnav-brand{
+  font-weight:700;font-size:15px;
+  color:var(--white);padding:13px 28px;
+  border-left:1px solid rgba(255,255,255,0.08);
+  border-right:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;
+  letter-spacing:0.02em;flex:1;justify-content:center;
+}
+.fnav-contact{
+  background:var(--green);color:var(--black);
+  font-weight:600;font-size:14px;
+  padding:13px 22px;cursor:none;border:none;
+  letter-spacing:0.01em;transition:background .25s;
+  display:flex;align-items:center;
+}
+.fnav-contact:hover{background:var(--green-dark);}
+
+/* ===== MENU OVERLAY ===== */
+#menu-overlay{
+  position:fixed;inset:0;
+  background:rgba(5,5,5,0.97);
+  z-index:9500;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;
+  opacity:0;pointer-events:none;
+  transition:opacity .45s cubic-bezier(.4,0,.2,1);
+  backdrop-filter:blur(10px);
+}
+#menu-overlay.open{opacity:1;pointer-events:all;}
+.menu-link{
+  font-family:var(--font-heading);
+  font-size:clamp(44px,7vw,90px);
+  color:var(--white);text-decoration:none;
+  letter-spacing:0.02em;line-height:1.1;
+  cursor:none;
+  transform:translateY(20px);opacity:0;
+  transition:color .25s,transform .5s,opacity .5s;
+}
+#menu-overlay.open .menu-link{transform:translateY(0);opacity:1;}
+#menu-overlay.open .menu-link:nth-child(2){transition-delay:.05s;}
+#menu-overlay.open .menu-link:nth-child(3){transition-delay:.10s;}
+#menu-overlay.open .menu-link:nth-child(4){transition-delay:.15s;}
+#menu-overlay.open .menu-link:nth-child(5){transition-delay:.20s;}
+#menu-overlay.open .menu-link:nth-child(6){transition-delay:.25s;}
+.menu-link:hover{color:var(--green);}
+.menu-close-btn{
+  position:absolute;top:24px;right:28px;
+  width:44px;height:44px;border-radius:50%;
+  background:var(--green);border:none;
+  font-size:18px;font-weight:700;color:var(--black);
+  cursor:none;display:flex;align-items:center;
+  justify-content:center;transition:background .25s;
+}
+.menu-close-btn:hover{background:var(--green-dark);}
+
+/* ============================================
+   SECTION 1: HERO — BLACK + SWIRL
+============================================ */
+#s1-hero{
+  position:relative;width:100%;height:100vh;
+  background:#000;display:flex;
+  align-items:center;justify-content:center;
+  overflow:hidden;
+}
+#swirl-canvas{
+  position:absolute;inset:0;
+  width:100%;height:100%;display:block;
+}
+.corner-plus{
+  position:absolute;font-size:22px;font-weight:300;
+  color:var(--white);pointer-events:none;z-index:2;
+  line-height:1;
+}
+.corner-plus.tl{top:22px;left:24px;}
+.corner-plus.tr{top:22px;right:24px;}
+.corner-plus.bl{bottom:80px;left:24px;}
+.corner-plus.br{bottom:80px;right:24px;}
+
+/* ============================================
+   SECTION 2: BUILT DIFFERENT
+============================================ */
+#s2-built{
+  position:relative;width:100%;height:100vh;
+  background:#000;display:flex;
+  align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.built-text{
+  font-family:var(--font-heading);
+  font-size:clamp(56px,9.5vw,138px);
+  color:var(--white);text-align:center;
+  letter-spacing:0.02em;line-height:1;
+  position:relative;z-index:2;
+}
+.s2-dot{
+  position:absolute;
+  width:10px;height:10px;
+  background:var(--white);border-radius:50%;
+  bottom:calc(50% - 100px);
+  left:calc(50% - 40px);z-index:2;
+}
+
+/* ============================================
+   SECTION 3: SPLIT HERO (YOUR BRAND)
+============================================ */
+#s3-split{
+  position:relative;
+  min-height:100vh;
+  background:var(--bg-light);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  overflow:hidden;
+}
+.s3-divider{
+  position:absolute;left:50%;top:0;bottom:0;
+  width:1px;background:rgba(0,0,0,0.1);z-index:1;
+}
+
+/* The 3D image - positioned at center overlapping both columns */
+.s3-3d-image{
+  position:absolute;
+  /* Sits at the divider line, spanning both columns */
+  left:50%;
+  top:50%;
+  transform:translate(-62%, -50%);
+  width:clamp(280px, 38vw, 560px);
+  height:auto;
+  z-index:5;
+  pointer-events:none;
+  filter:drop-shadow(0 20px 60px rgba(0,0,0,0.25));
+  will-change:transform;
+}
+
+.s3-left{
+  padding:80px 64px;
+  display:flex;flex-direction:column;
+  justify-content:center;gap:36px;
+  position:relative;z-index:4;
+}
+.s3-desc{
+  font-size:clamp(15px,1.55vw,18px);
+  line-height:1.68;color:#1a1a1a;
+  max-width:340px;font-weight:400;
+}
+.btn-lime{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--green);color:var(--black);
+  font-family:var(--font-heading);font-size:17px;
+  letter-spacing:0.08em;padding:15px 36px;
+  border:none;cursor:none;text-decoration:none;
+  width:fit-content;
+  transition:background .25s,transform .2s;
+}
+.btn-lime:hover{background:var(--green-dark);transform:scale(1.02);}
+.btn-black{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--black);color:var(--white);
+  font-family:var(--font-heading);font-size:17px;
+  letter-spacing:0.08em;padding:15px 36px;
+  border:none;cursor:none;text-decoration:none;
+  width:fit-content;
+  transition:background .25s;
+}
+.btn-black:hover{background:#222;}
+.s3-right{
+  padding:60px 56px 60px 0;
+  display:flex;align-items:center;
+  position:relative;z-index:4;
+}
+.s3-headline{
+  font-family:var(--font-heading);
+  font-size:clamp(42px,6.5vw,100px);
+  line-height:0.95;letter-spacing:0.01em;
+  color:var(--black);
+}
+.s3-headline .lime{color:var(--green);}
+
+/* hex decorations */
+.hex-cluster{position:absolute;pointer-events:none;z-index:2;}
+.hex-row{display:flex;gap:3px;margin-bottom:3px;}
+.h{
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  flex-shrink:0;
+}
+
+/* ============================================
+   SECTION 4: WE ARE GOOD AT
+============================================ */
+#s4-services{
+  position:relative;
+  min-height:100vh;
+  background:var(--bg-light);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:80px 40px;overflow:hidden;
+}
+.s4-title{
+  font-family:var(--font-heading);
+  font-size:clamp(48px,7.5vw,108px);
+  color:var(--black);letter-spacing:0.02em;
+  text-align:center;position:relative;z-index:4;
+  line-height:1;margin-bottom:16px;
+}
+.s4-wheel-wrap{
+  position:relative;
+  width:clamp(340px,52vw,660px);
+  height:clamp(340px,52vw,660px);
+  z-index:4;
+}
+/* The 3D asset image inside wheel */
+.svc-3d-img{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:65%;height:auto;
+  z-index:3;
+  pointer-events:none;
+  filter:drop-shadow(0 10px 40px rgba(0,100,0,0.3));
+  will-change:transform;
+}
+#svc-dashed-canvas{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  pointer-events:none;z-index:2;
+}
+/* Service axis labels */
+.svc-lbl{
+  position:absolute;font-family:var(--font-heading);
+  font-size:clamp(13px,1.7vw,21px);
+  letter-spacing:0.07em;color:var(--black);
+  display:flex;align-items:center;gap:5px;
+  white-space:nowrap;z-index:5;
+}
+.svc-lbl::before{content:'•';color:var(--green);font-size:1.3em;}
+.svc-lbl.top{top:-4px;left:50%;transform:translateX(-50%);}
+.svc-lbl.right{right:-130px;top:50%;transform:translateY(-50%);}
+.svc-lbl.bottom{bottom:-44px;left:50%;transform:translateX(-50%);}
+.svc-lbl.left{left:-110px;top:50%;transform:translateY(-50%);}
+
+/* ============================================
+   SECTION 5: FEATURED WORK
+============================================ */
+#s5-work{
+  background:var(--green);
+  padding:80px 0 100px;
+  overflow:hidden;position:relative;
+}
+.fw-heading{
+  font-family:var(--font-heading);
+  font-size:clamp(60px,10vw,130px);
+  color:var(--black);text-align:center;
+  letter-spacing:0.02em;margin-bottom:60px;
+  line-height:1;padding:0 40px;
+}
+.fw-slider-wrap{overflow:hidden;position:relative;}
+.fw-track{
+  display:flex;
+  width:max-content;
+  will-change:transform;
+}
+.fw-slide{
+  width:100vw;padding:0 60px;
+  display:grid;grid-template-columns:55% 45%;
+  align-items:center;gap:0;flex-shrink:0;
+}
+.fw-img-col{position:relative;z-index:2;}
+.fw-img-wrap{
+  border-radius:18px;overflow:hidden;
+  width:100%;aspect-ratio:16/10;
+  background:#111;position:relative;
+  box-shadow:0 20px 60px rgba(0,0,0,0.25);
+}
+.fw-img-wrap img{
+  width:100%;height:100%;object-fit:cover;
+  display:block;
+}
+.fw-info-col{
+  padding-left:40px;position:relative;
+}
+.fw-sunburst-svg{
+  position:absolute;left:-20px;top:50%;
+  transform:translateY(-50%);
+  width:240px;height:240px;
+  pointer-events:none;z-index:1;
+  opacity:0.75;
+}
+.fw-dot-bullet{
+  width:9px;height:9px;background:var(--black);
+  border-radius:50%;margin-bottom:18px;
+  position:relative;z-index:2;
+}
+.fw-proj-name{
+  font-family:var(--font-heading);
+  font-size:clamp(28px,4vw,58px);
+  color:var(--black);letter-spacing:0.03em;
+  line-height:1;margin-bottom:10px;
+  position:relative;z-index:2;
+}
+.fw-proj-tags{
+  font-family:var(--font-body);font-size:13px;
+  color:#222;letter-spacing:0.09em;font-weight:600;
+  position:relative;z-index:2;
+}
+.fw-controls{
+  display:flex;justify-content:center;
+  align-items:center;gap:10px;margin-top:48px;
+}
+.fw-ctrl-dot{
+  width:9px;height:9px;border-radius:50%;
+  background:rgba(0,0,0,0.25);cursor:none;
+  transition:background .3s,transform .3s;
+}
+.fw-ctrl-dot.on{background:var(--black);transform:scale(1.3);}
+
+/* ============================================
+   SECTION 6: PROCESS
+============================================ */
+#s6-process{
+  background:var(--bg-light);
+  padding:120px 64px 140px;
+  position:relative;overflow:hidden;
+}
+.proc-header{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:48px;align-items:end;margin-bottom:100px;
+}
+.proc-main-title{
+  font-family:var(--font-heading);
+  font-size:clamp(40px,5.5vw,86px);
+  color:var(--black);line-height:1.0;
+  letter-spacing:0.01em;
+}
+.proc-main-title .lime{color:var(--green);}
+.proc-right-body{
+  font-size:clamp(14px,1.45vw,17px);
+  line-height:1.72;color:#222;
+  max-width:500px;margin-bottom:32px;
+}
+.proc-flow{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:0;
+  align-items:start;
+}
+.proc-col{
+  display:flex;flex-direction:column;
+  align-items:center;
+}
+.proc-col-title{
+  font-family:var(--font-heading);
+  font-size:clamp(13px,1.6vw,20px);
+  letter-spacing:0.09em;color:var(--black);
+  margin-bottom:14px;text-align:center;
+}
+.proc-node{
+  border-radius:14px;
+  padding:22px 20px;
+  position:relative;
+  width:90%;max-width:210px;
+}
+.proc-node.dark{background:var(--black);color:var(--white);}
+.proc-node.lime{background:var(--green);color:var(--black);}
+.proc-node ul{list-style:none;font-size:clamp(12px,1.2vw,14px);line-height:1.9;font-weight:500;}
+.proc-node.dark ul li::before{content:'• ';color:var(--green);}
+.proc-node.lime ul li::before{content:'• ';color:var(--black);}
+.proc-dot{
+  width:13px;height:13px;border-radius:50%;
+  background:var(--bg-light);border:2px solid #aaa;
+  position:absolute;z-index:3;
+}
+.proc-dot.t{top:-6px;left:50%;transform:translateX(-50%);}
+.proc-dot.b{bottom:-6px;left:50%;transform:translateX(-50%);}
+.proc-dot.l{left:-6px;top:50%;transform:translateY(-50%);}
+.proc-dot.r{right:-6px;top:50%;transform:translateY(-50%);}
+.proc-col2-inner{
+  display:flex;flex-direction:column;
+  align-items:center;gap:0;width:100%;
+}
+.proc-spacer{height:28px;}
+#proc-svg{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  pointer-events:none;overflow:visible;
+}
+
+/* ============================================
+   SECTION 7: CTA — CURIOSITY
+============================================ */
+#s7-cta{
+  background:var(--green);
+  padding:120px 80px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:60px;align-items:center;
+  position:relative;overflow:hidden;
+  min-height:80vh;
+}
+.cta-big{
+  font-family:var(--font-heading);
+  font-size:clamp(44px,6vw,92px);
+  color:var(--black);line-height:1.0;
+  letter-spacing:0.01em;
+}
+.cta-rhs{display:flex;flex-direction:column;gap:28px;}
+.cta-body{
+  font-size:clamp(14px,1.45vw,17px);
+  line-height:1.72;color:#111;max-width:500px;
+}
+.cta-plus{
+  position:absolute;font-size:18px;color:rgba(0,0,0,0.25);
+}
+.cta-plus.tl{top:20px;left:20px;}
+.cta-plus.tr{top:20px;right:20px;}
+
+/* ============================================
+   RESPONSIVE
+============================================ */
+@media(max-width:960px){
+  #s3-split{grid-template-columns:1fr;}
+  .s3-3d-image{
+    width:clamp(200px,60vw,380px);
+    left:50%;top:auto;bottom:0;
+    transform:translateX(-50%);
+    position:relative;
+    margin:0 auto;display:block;
+  }
+  .s3-right{padding:0 32px 120px;justify-content:flex-start;}
+  .s3-left{padding:60px 32px 32px;}
+  .s3-headline{font-size:clamp(36px,9vw,72px);}
+  .svc-lbl.right{right:-90px;}
+  .svc-lbl.left{left:-80px;}
+  .fw-slide{grid-template-columns:1fr;padding:0 24px;gap:28px;}
+  .fw-info-col{padding-left:0;padding-top:16px;}
+  .proc-header{grid-template-columns:1fr;}
+  .proc-flow{grid-template-columns:1fr 1fr;gap:20px;}
+  #s7-cta{grid-template-columns:1fr;padding:80px 32px;}
+  #proc-svg{display:none;}
+  #floating-nav{width:88vw;}
+}
+@media(max-width:600px){
+  .built-text{font-size:clamp(36px,12vw,64px);}
+  .fw-heading{font-size:clamp(44px,14vw,80px);}
+  .proc-flow{grid-template-columns:1fr;}
+  #s4-services{padding:60px 20px;}
+  .s4-wheel-wrap{width:86vw;height:86vw;}
+  .svc-lbl.right,.svc-lbl.left{position:relative;right:auto;left:auto;top:auto;transform:none;margin:4px 0;}
+  #s7-cta{padding:80px 24px;}
+  .cta-big{font-size:clamp(38px,11vw,68px);}
+  .fw-slide{padding:0 16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- SCROLLBAR -->
+<div class="scrollbar-track"><div class="scrollbar-thumb" id="sb-thumb"></div></div>
+
+<!-- FLOATING NAV -->
+<nav id="floating-nav">
+  <button class="fnav-menu" id="menu-open-btn">
+    <div class="fnav-hamburger"><span></span><span></span><span></span></div>
+    Menu
+  </button>
+  <div class="fnav-brand">Anyflow</div>
+  <button class="fnav-contact" id="contact-btn">Contact Us</button>
+</nav>
+
+<!-- MENU OVERLAY -->
+<div id="menu-overlay">
+  <button class="menu-close-btn" id="menu-close-btn">✕</button>
+  <a href="#s1-hero"    class="menu-link">HOME</a>
+  <a href="#s3-split"   class="menu-link">ABOUT</a>
+  <a href="#s4-services"class="menu-link">SERVICES</a>
+  <a href="#s5-work"    class="menu-link">WORK</a>
+  <a href="#s6-process" class="menu-link">PROCESS</a>
+  <a href="#s7-cta"     class="menu-link">CONTACT</a>
+</div>
+
+<!-- ============================================================
+     SECTION 3 — SPLIT: LEFT desc+CTA | RIGHT big headline
+     Asset1.png = the big 3D green character overlapping center
+============================================================ -->
+<section id="s3-split">
+  <div class="s3-divider"></div>
+
+  <!-- THE 3D IMAGE ASSET — positioned at divider overlapping both sides -->
+  <img
+    src="Images/Asset1.png"
+    alt="3D character"
+    class="s3-3d-image"
+    id="s3-3d-img"
+    draggable="false"
+  >
+
+  <!-- Hex cluster bottom-left -->
+  <div class="hex-cluster" style="bottom:48px;left:36px;">
+    <div class="hex-row">
+      <div class="h" style="width:32px;height:32px;background:rgba(127,255,0,.15);"></div>
+      <div class="h" style="width:32px;height:32px;background:rgba(127,255,0,.28);"></div>
+      <div class="h" style="width:32px;height:32px;background:transparent;outline:2px solid rgba(127,255,0,.25);outline-offset:-1px;"></div>
+      <div class="h" style="width:32px;height:32px;background:transparent;outline:2px solid rgba(127,255,0,.15);outline-offset:-1px;"></div>
+    </div>
+    <div class="hex-row" style="margin-left:18px;">
+      <div class="h" style="width:32px;height:32px;background:rgba(127,255,0,.44);"></div>
+      <div class="h" style="width:32px;height:32px;background:rgba(127,255,0,.60);"></div>
+      <div class="h" style="width:32px;height:32px;background:rgba(127,255,0,.28);"></div>
+    </div>
+    <div class="hex-row">
+      <div class="h" style="width:32px;height:32px;background:transparent;outline:2px solid rgba(127,255,0,.12);outline-offset:-1px;"></div>
+      <div class="h" style="width:32px;height:32px;background:rgba(127,255,0,.12);"></div>
+      <div class="h" style="width:32px;height:32px;background:rgba(127,255,0,.20);"></div>
+      <div class="h" style="width:32px;height:32px;background:transparent;outline:2px solid rgba(127,255,0,.10);outline-offset:-1px;"></div>
+    </div>
+  </div>
+
+  <div class="s3-left">
+    <p class="s3-desc">We design immersive, motion-driven websites that command attention and guide users to act. Clean builds. Sharp strategy. Zero fluff.</p>
+    <a href="#s7-cta" class="btn-lime">LET'S TALK</a>
+  </div>
+
+  <div class="s3-right">
+    <h1 class="s3-headline">
+      YOUR BRAND<br>
+      <span class="lime">DESERVES</span> MORE<br>
+      THAN A PRETTY<br>
+      WEBSITE.
+    </h1>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 4 — WE ARE GOOD AT (Services wheel)
+     Asset1.png used as the 3D element in center of wheel
+============================================================ -->
+<section id="s4-services">
+
+  <!-- hex top-right -->
+  <div style="position:absolute;top:40px;right:40px;opacity:0.6;z-index:2;">
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <div style="display:flex;gap:3px;">
+        <div class="h" style="width:28px;height:28px;background:transparent;outline:2px solid rgba(127,255,0,.38);outline-offset:-1px;"></div>
+        <div class="h" style="width:28px;height:28px;background:transparent;outline:2px solid rgba(127,255,0,.30);outline-offset:-1px;"></div>
+        <div class="h" style="width:28px;height:28px;background:rgba(127,255,0,.65);"></div>
+      </div>
+      <div style="display:flex;gap:3px;margin-left:15px;">
+        <div class="h" style="width:28px;height:28px;background:transparent;outline:2px solid rgba(127,255,0,.22);outline-offset:-1px;"></div>
+        <div class="h" style="width:28px;height:28px;background:rgba(127,255,0,.35);"></div>
+      </div>
+      <div style="display:flex;gap:3px;">
+        <div class="h" style="width:28px;height:28px;background:transparent;outline:2px solid rgba(127,255,0,.15);outline-offset:-1px;"></div>
+        <div class="h" style="width:28px;height:28px;background:transparent;outline:2px solid rgba(127,255,0,.10);outline-offset:-1px;"></div>
+        <div class="h" style="width:28px;height:28px;background:transparent;outline:2px solid rgba(127,255,0,.08);outline-offset:-1px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="s4-title">WE ARE <span style="color:var(--green);">G</span>OOD AT</p>
+
+  <div class="s4-wheel-wrap" id="svc-wheel">
+    <!-- Dashed circle canvas -->
+    <canvas id="svc-dashed-canvas"></canvas>
+
+    <!-- Asset1.png as the 3D element -->
+    <img
+      src="Images/Asset1.png"
+      alt="3D element"
+      class="svc-3d-img"
+      id="svc-3d-img"
+      draggable="false"
+    >
+
+    <span class="svc-lbl top">DEVELOPMENT</span>
+    <span class="svc-lbl right">SEO</span>
+    <span class="svc-lbl bottom">E-COMMERCE</span>
+    <span class="svc-lbl left">DESIGN</span>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 5 — FEATURED WORK (Green bg, slider)
+     Asset2–Asset5 as project images
+============================================================ -->
+<section id="s5-work">
+  <h2 class="fw-heading">FEATURED WORK</h2>
+
+  <div class="fw-slider-wrap">
+    <div class="fw-track" id="fw-track">
+
+      <!-- Slide 1: Asset2 -->
+      <div class="fw-slide">
+        <div class="fw-img-col">
+          <div class="fw-img-wrap">
+            <img src="Images/Asset2.png"
+                 alt="Pawww"
+                 onerror="this.style.display='none';this.parentNode.style.background='#1a2a10';">
+          </div>
+        </div>
+        <div class="fw-info-col">
+          <svg class="fw-sunburst-svg" viewBox="0 0 240 240" fill="none">
+            <g transform="translate(40,200)">
+              <line x1="0" y1="0" x2="-50" y2="-120" stroke="white" stroke-width="1.5" opacity="0.55"/>
+              <line x1="0" y1="0" x2="-30" y2="-130" stroke="white" stroke-width="1.5" opacity="0.5"/>
+              <line x1="0" y1="0" x2="-10" y2="-135" stroke="white" stroke-width="1.5" opacity="0.45"/>
+              <line x1="0" y1="0" x2="10"  y2="-130" stroke="white" stroke-width="1.5" opacity="0.40"/>
+              <line x1="0" y1="0" x2="30"  y2="-120" stroke="white" stroke-width="1.5" opacity="0.35"/>
+              <line x1="0" y1="0" x2="50"  y2="-108" stroke="white" stroke-width="1.5" opacity="0.28"/>
+              <line x1="0" y1="0" x2="70"  y2="-90"  stroke="white" stroke-width="1.5" opacity="0.22"/>
+              <line x1="0" y1="0" x2="90"  y2="-70"  stroke="white" stroke-width="1.5" opacity="0.16"/>
+              <line x1="0" y1="0" x2="110" y2="-45"  stroke="white" stroke-width="1.5" opacity="0.10"/>
+            </g>
+            <line x1="200" y1="10" x2="0" y2="230" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          </svg>
+          <div class="fw-dot-bullet"></div>
+          <div class="fw-proj-name">PAWWW</div>
+          <div class="fw-proj-tags">CONCEPT • 3D</div>
+        </div>
+      </div>
+
+      <!-- Slide 2: Asset3.webp -->
+      <div class="fw-slide">
+        <div class="fw-img-col">
+          <div class="fw-img-wrap">
+            <img src="Images/Asset3.webp"
+                 alt="Deepflow"
+                 onerror="this.style.display='none';this.parentNode.style.background='#0d0d1a';">
+          </div>
+        </div>
+        <div class="fw-info-col">
+          <svg class="fw-sunburst-svg" viewBox="0 0 240 240" fill="none">
+            <g transform="translate(40,200)">
+              <line x1="0" y1="0" x2="-50" y2="-120" stroke="white" stroke-width="1.5" opacity="0.55"/>
+              <line x1="0" y1="0" x2="-30" y2="-130" stroke="white" stroke-width="1.5" opacity="0.5"/>
+              <line x1="0" y1="0" x2="-10" y2="-135" stroke="white" stroke-width="1.5" opacity="0.45"/>
+              <line x1="0" y1="0" x2="10"  y2="-130" stroke="white" stroke-width="1.5" opacity="0.40"/>
+              <line x1="0" y1="0" x2="30"  y2="-120" stroke="white" stroke-width="1.5" opacity="0.35"/>
+              <line x1="0" y1="0" x2="50"  y2="-108" stroke="white" stroke-width="1.5" opacity="0.28"/>
+              <line x1="0" y1="0" x2="70"  y2="-90"  stroke="white" stroke-width="1.5" opacity="0.22"/>
+              <line x1="0" y1="0" x2="90"  y2="-70"  stroke="white" stroke-width="1.5" opacity="0.16"/>
+            </g>
+            <line x1="200" y1="10" x2="0" y2="230" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          </svg>
+          <div class="fw-dot-bullet"></div>
+          <div class="fw-proj-name">DEEPFLOW</div>
+          <div class="fw-proj-tags">WEB • DEVELOPMENT</div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Asset4 -->
+      <div class="fw-slide">
+        <div class="fw-img-col">
+          <div class="fw-img-wrap">
+            <img src="Images/Asset4.png"
+                 alt="WTF Ruchit"
+                 onerror="this.style.display='none';this.parentNode.style.background='#0a0a0a';">
+          </div>
+        </div>
+        <div class="fw-info-col">
+          <svg class="fw-sunburst-svg" viewBox="0 0 240 240" fill="none">
+            <g transform="translate(40,200)">
+              <line x1="0" y1="0" x2="-50" y2="-120" stroke="white" stroke-width="1.5" opacity="0.55"/>
+              <line x1="0" y1="0" x2="-30" y2="-130" stroke="white" stroke-width="1.5" opacity="0.5"/>
+              <line x1="0" y1="0" x2="-10" y2="-135" stroke="white" stroke-width="1.5" opacity="0.45"/>
+              <line x1="0" y1="0" x2="10"  y2="-130" stroke="white" stroke-width="1.5" opacity="0.40"/>
+              <line x1="0" y1="0" x2="30"  y2="-120" stroke="white" stroke-width="1.5" opacity="0.35"/>
+              <line x1="0" y1="0" x2="50"  y2="-108" stroke="white" stroke-width="1.5" opacity="0.28"/>
+              <line x1="0" y1="0" x2="70"  y2="-90"  stroke="white" stroke-width="1.5" opacity="0.22"/>
+            </g>
+            <line x1="200" y1="10" x2="0" y2="230" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          </svg>
+          <div class="fw-dot-bullet"></div>
+          <div class="fw-proj-name">WTF RUCHIT</div>
+          <div class="fw-proj-tags">WEB • DESIGN • DEVELOPMENT</div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Asset5 -->
+      <div class="fw-slide">
+        <div class="fw-img-col">
+          <div class="fw-img-wrap">
+            <img src="Images/Asset5.png"
+                 alt="Pritam Das"
+                 onerror="this.style.display='none';this.parentNode.style.background='#0a1505';">
+          </div>
+        </div>
+        <div class="fw-info-col">
+          <svg class="fw-sunburst-svg" viewBox="0 0 240 240" fill="none">
+            <g transform="translate(40,200)">
+              <line x1="0" y1="0" x2="-50" y2="-120" stroke="white" stroke-width="1.5" opacity="0.55"/>
+              <line x1="0" y1="0" x2="-30" y2="-130" stroke="white" stroke-width="1.5" opacity="0.5"/>
+              <line x1="0" y1="0" x2="-10" y2="-135" stroke="white" stroke-width="1.5" opacity="0.45"/>
+              <line x1="0" y1="0" x2="10"  y2="-130" stroke="white" stroke-width="1.5" opacity="0.40"/>
+              <line x1="0" y1="0" x2="30"  y2="-120" stroke="white" stroke-width="1.5" opacity="0.35"/>
+            </g>
+            <line x1="200" y1="10" x2="0" y2="230" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          </svg>
+          <div class="fw-dot-bullet"></div>
+          <div class="fw-proj-name">PRITAM DAS</div>
+          <div class="fw-proj-tags">WEB • DEVELOPMENT • WEBGL</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="fw-controls" id="fw-controls">
+    <div class="fw-ctrl-dot on" data-idx="0"></div>
+    <div class="fw-ctrl-dot" data-idx="1"></div>
+    <div class="fw-ctrl-dot" data-idx="2"></div>
+    <div class="fw-ctrl-dot" data-idx="3"></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 6 — PROCESS
+============================================================ -->
+<section id="s6-process">
+
+  <!-- hex top-right -->
+  <div style="position:absolute;top:60px;right:60px;opacity:0.55;z-index:1;">
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <div style="display:flex;gap:3px;">
+        <div class="h" style="width:28px;height:28px;background:transparent;outline:2px solid rgba(127,255,0,.4);outline-offset:-1px;"></div>
+        <div class="h" style="width:28px;height:28px;background:transparent;outline:2px solid rgba(127,255,0,.32);outline-offset:-1px;"></div>
+        <div class="h" style="width:28px;height:28px;background:transparent;outline:2px solid rgba(127,255,0,.25);outline-offset:-1px;"></div>
+      </div>
+      <div style="display:flex;gap:3px;margin-left:15px;">
+        <div class="h" style="width:28px;height:28px;background:transparent;outline:2px solid rgba(127,255,0,.20);outline-offset:-1px;"></div>
+        <div class="h" style="width:28px;height:28px;background:transparent;outline:2px solid rgba(127,255,0,.15);outline-offset:-1px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- hex bottom-left -->
+  <div style="position:absolute;bottom:60px;left:40px;z-index:1;">
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <div style="display:flex;gap:3px;">
+        <div class="h" style="width:30px;height:30px;background:rgba(127,255,0,.55);"></div>
+        <div class="h" style="width:30px;height:30px;background:rgba(127,255,0,.70);"></div>
+        <div class="h" style="width:30px;height:30px;background:rgba(127,255,0,.40);"></div>
+      </div>
+      <div style="display:flex;gap:3px;margin-left:16px;">
+        <div class="h" style="width:30px;height:30px;background:rgba(127,255,0,.32);"></div>
+        <div class="h" style="width:30px;height:30px;background:rgba(127,255,0,.60);"></div>
+      </div>
+      <div style="display:flex;gap:3px;">
+        <div class="h" style="width:30px;height:30px;background:rgba(127,255,0,.15);"></div>
+        <div class="h" style="width:30px;height:30px;background:rgba(127,255,0,.28);"></div>
+        <div class="h" style="width:30px;height:30px;background:rgba(127,255,0,.18);"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="proc-header">
+    <div>
+      <h2 class="proc-main-title">
+        WE BELIEVE IN A <span class="lime">PROCESS</span><br>THAT WORKS
+      </h2>
+    </div>
+    <div>
+      <p class="proc-right-body">If you have an idea, a thought, or even just a rough direction in mind, we'd truly love to hear it. You don't need everything figured out. Sometimes a simple conversation is all it takes to find the right direction. Let's talk and see where it leads.</p>
+      <a href="#s7-cta" class="btn-lime">SCHEDULE CALL</a>
+    </div>
+  </div>
+
+  <div style="position:relative;" id="proc-wrap">
+    <svg id="proc-svg" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;"></svg>
+
+    <div class="proc-flow" id="proc-flow">
+
+      <!-- COL 1: DISCOVERY -->
+      <div class="proc-col">
+        <div class="proc-col-title">DISCOVERY</div>
+        <div class="proc-node lime" id="pnd">
+          <div class="proc-dot r" id="pnd-r"></div>
+          <ul>
+            <li>Creative Brief</li>
+            <li>Brand Research</li>
+            <li>Mood Boards</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- COL 2: CONCEPT + DESIGN + DEVELOP stacked -->
+      <div class="proc-col">
+        <div class="proc-col2-inner">
+          <div class="proc-col-title">CONCEPT</div>
+          <div class="proc-node dark" id="pnc">
+            <div class="proc-dot t" id="pnc-t"></div>
+            <div class="proc-dot l" id="pnc-l"></div>
+            <div class="proc-dot r" id="pnc-r"></div>
+            <div class="proc-dot b" id="pnc-b"></div>
+            <ul>
+              <li>Visual Direction</li>
+              <li>Art Direction</li>
+              <li>Storyboarding</li>
+            </ul>
+          </div>
+          <div class="proc-spacer"></div>
+          <div class="proc-col-title">DESIGN</div>
+          <div class="proc-node lime" id="pnds">
+            <div class="proc-dot t" id="pnds-t"></div>
+            <div class="proc-dot l" id="pnds-l"></div>
+            <div class="proc-dot r" id="pnds-r"></div>
+            <div class="proc-dot b" id="pnds-b"></div>
+            <ul>
+              <li>UI/UX Craft</li>
+              <li>Motion Design</li>
+              <li>Interaction Design</li>
+            </ul>
+          </div>
+          <div class="proc-spacer"></div>
+          <div class="proc-col-title">DEVELOP</div>
+          <div class="proc-node dark" id="pndv">
+            <div class="proc-dot t" id="pndv-t"></div>
+            <div class="proc-dot l" id="pndv-l"></div>
+            <div class="proc-dot r" id="pndv-r"></div>
+            <ul>
+              <li>Creative Coding</li>
+              <li>WebGL &amp; 3D</li>
+              <li>Animations</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- COL 3: POLISH -->
+      <div class="proc-col" style="justify-content:center;margin-top:110px;">
+        <div class="proc-col-title">POLISH</div>
+        <div class="proc-node lime" id="pnp">
+          <div class="proc-dot l" id="pnp-l"></div>
+          <div class="proc-dot r" id="pnp-r"></div>
+          <ul>
+            <li>Micro-interactions</li>
+            <li>Performance</li>
+            <li>Pixel Perfect</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- COL 4: LAUNCH -->
+      <div class="proc-col" style="justify-content:center;margin-top:110px;">
+        <div class="proc-col-title">LAUNCH</div>
+        <div class="proc-node dark" id="pnl">
+          <div class="proc-dot l" id="pnl-l"></div>
+          <div style="position:absolute;top:-20px;left:18px;
+               width:8px;height:8px;background:var(--black);
+               border-radius:50%;border:2px solid #999;"></div>
+          <ul>
+            <li>Go Live</li>
+            <li>Case Study</li>
+            <li>Awards Submit</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 7 — CTA: CURIOSITY
+============================================================ -->
+<section id="s7-cta">
+  <span class="cta-plus tl">+</span>
+  <span class="cta-plus tr">+</span>
+
+  <div class="cta-big">
+    EVERY WORK YOU<br>
+    SEE HERE STARTED<br>
+    WITH CURIOSITY
+  </div>
+
+  <div class="cta-rhs">
+    <p class="cta-body">Have an idea, a challenge, or a direction you want to explore? You don't need all the answers yet. A focused conversation is often enough to uncover the right path. Reach out and let's see what we can build together.</p>
+    <a href="mailto:hello@anyflow.agency" class="btn-black">MAKE IT REAL</a>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 1 — HERO: BLACK + GREEN SWIRL
+============================================================ -->
+<section id="s1-hero">
+  <span class="corner-plus tl">+</span>
+  <span class="corner-plus tr">+</span>
+  <span class="corner-plus bl">+</span>
+  <span class="corner-plus br">+</span>
+  <canvas id="swirl-canvas"></canvas>
+</section>
+
+<!-- ============================================================
+     SECTION 2 — BUILT DIFFERENT
+============================================================ -->
+<section id="s2-built">
+  <h2 class="built-text" id="built-txt">BUILT DIFFERENT</h2>
+  <div class="s2-dot"></div>
+</section>
+
+
+<!-- ============================================================
+     SCRIPTS
+============================================================ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.1/dist/lenis.min.js"></script>
+
+<script>
+'use strict';
+gsap.registerPlugin(ScrollTrigger);
+
+/* =============================================
+   LENIS SMOOTH SCROLL
+============================================= */
+const lenis = new Lenis({
+  duration: 1.25,
+  easing: t => Math.min(1, 1.001 - Math.pow(2, -10*t)),
+  smoothWheel: true,
+  wheelMultiplier: 0.85,
+});
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add(t => lenis.raf(t * 1000));
+gsap.ticker.lagSmoothing(0);
+
+/* =============================================
+   SCROLLBAR
+============================================= */
+const sbThumb = document.getElementById('sb-thumb');
+lenis.on('scroll', ({scroll, limit}) => {
+  const pct = scroll / limit;
+  const hPct = 0.12;
+  sbThumb.style.height = (window.innerHeight * hPct) + 'px';
+  sbThumb.style.top    = pct * (window.innerHeight * (1 - hPct)) + 'px';
+});
+
+/* =============================================
+   CURSOR
+============================================= */
+const cDot  = document.getElementById('cursor-dot');
+const cRing = document.getElementById('cursor-ring');
+let mX=0, mY=0, rX=0, rY=0;
+
+document.addEventListener('mousemove', e => {
+  mX = e.clientX; mY = e.clientY;
+  cDot.style.left = mX + 'px';
+  cDot.style.top  = mY + 'px';
+});
+(function animRing() {
+  rX += (mX - rX) * 0.1;
+  rY += (mY - rY) * 0.1;
+  cRing.style.left = rX + 'px';
+  cRing.style.top  = rY + 'px';
+  requestAnimationFrame(animRing);
+})();
+
+/* Cursor size on hover */
+document.querySelectorAll('a,button,.fw-ctrl-dot').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    gsap.to(cDot,  {width:16,height:16,duration:.2});
+    gsap.to(cRing, {width:54,height:54,duration:.3});
+  });
+  el.addEventListener('mouseleave', () => {
+    gsap.to(cDot,  {width:10,height:10,duration:.2});
+    gsap.to(cRing, {width:38,height:38,duration:.3});
+  });
+});
+
+/* =============================================
+   LIGHT MODE DETECTION
+============================================= */
+const lightSections = ['s3-split','s4-services','s6-process'];
+lightSections.forEach(id => {
+  ScrollTrigger.create({
+    trigger: '#'+id,
+    start:'top 55%', end:'bottom 45%',
+    onEnter:     () => document.body.classList.add('light-mode'),
+    onLeave:     () => document.body.classList.remove('light-mode'),
+    onEnterBack: () => document.body.classList.add('light-mode'),
+    onLeaveBack: () => document.body.classList.remove('light-mode'),
+  });
+});
+ScrollTrigger.create({
+  trigger:'#s5-work', start:'top 55%', end:'bottom 45%',
+  onEnter:     ()=>document.body.classList.remove('light-mode'),
+  onLeave:     ()=>document.body.classList.add('light-mode'),
+  onEnterBack: ()=>document.body.classList.remove('light-mode'),
+  onLeaveBack: ()=>document.body.classList.add('light-mode'),
+});
+ScrollTrigger.create({
+  trigger:'#s7-cta', start:'top 55%',
+  onEnter:    ()=>document.body.classList.remove('light-mode'),
+  onLeaveBack:()=>document.body.classList.add('light-mode'),
+});
+
+/* =============================================
+   MENU
+============================================= */
+const menuOverlay = document.getElementById('menu-overlay');
+document.getElementById('menu-open-btn').addEventListener('click', () => menuOverlay.classList.add('open'));
+document.getElementById('menu-close-btn').addEventListener('click', () => menuOverlay.classList.remove('open'));
+document.getElementById('contact-btn').addEventListener('click', () => {
+  lenis.scrollTo('#s7-cta',{offset:-80,duration:1.6});
+});
+menuOverlay.querySelectorAll('.menu-link').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    menuOverlay.classList.remove('open');
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) lenis.scrollTo(t, {offset:-80, duration:1.6});
+  });
+});
+
+/* =============================================
+   SECTION 1 — SWIRL WEBGL
+============================================= */
+(function initSwirl() {
+  const canvas = document.getElementById('swirl-canvas');
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+
+  const resize = () => {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gl.viewport(0,0,canvas.width,canvas.height);
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  const vs = `attribute vec2 p;void main(){gl_Position=vec4(p,0,1);}`;
+  const fs = `
+precision highp float;
+uniform float T;uniform vec2 R;uniform vec2 M;
+
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){
+  vec2 i=floor(p),f=fract(p);
+  f=f*f*(3.0-2.0*f);
+  float a=hash(i),b=hash(i+vec2(1,0)),c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));
+  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
+}
+float fbm(vec2 p){
+  float v=0.0,a=0.5;
+  for(int i=0;i<7;i++){v+=a*noise(p);p=p*2.1+vec2(1.7,9.2);a*=0.5;}
+  return v;
+}
+void main(){
+  vec2 uv=(gl_FragCoord.xy-R*0.5)/min(R.x,R.y);
+  float d=length(uv);
+  float a=atan(uv.y,uv.x);
+  float sw=a-d*7.0+T*1.4+M.x*0.5;
+  vec2 wuv=vec2(cos(sw),sin(sw))*d;
+  float f1=fbm(wuv*3.5+T*0.3);
+  float f2=fbm(wuv*5.0-T*0.25+vec2(3.2,1.8));
+  float core=exp(-d*d*2.8)*2.2;
+  float mid=exp(-d*d*0.9)*(0.4+0.5*f1);
+  float outer=max(0.0,1.0-d*2.2)*(0.3+0.4*f2);
+  float glow=exp(-d*d*5.0)*0.8;
+  vec3 col=vec3(0.18,0.95,0.02)*core;
+  col+=vec3(0.05,0.85,0.0)*mid*1.6;
+  col+=vec3(0.0,0.55,0.0)*outer*1.1;
+  col+=vec3(0.5,1.0,0.1)*glow;
+  float alpha=clamp(core*0.7+mid*0.5+outer+glow,0.0,1.0);
+  alpha*=smoothstep(1.4,0.05,d);
+  gl_FragColor=vec4(col,alpha);
+}`;
+
+  const mkS = (t,s)=>{const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;};
+  const prog = gl.createProgram();
+  gl.attachShader(prog,mkS(gl.VERTEX_SHADER,vs));
+  gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(prog);gl.useProgram(prog);
+
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  const pl=gl.getAttribLocation(prog,'p');
+  gl.enableVertexAttribArray(pl);
+  gl.vertexAttribPointer(pl,2,gl.FLOAT,false,0,0);
+
+  const uT=gl.getUniformLocation(prog,'T');
+  const uR=gl.getUniformLocation(prog,'R');
+  const uM=gl.getUniformLocation(prog,'M');
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+
+  let mx=0,my=0,t0=null;
+  document.addEventListener('mousemove',e=>{mx=(e.clientX/window.innerWidth-0.5)*2;my=(e.clientY/window.innerHeight-0.5)*2;});
+
+  const draw=ts=>{
+    if(!t0)t0=ts;
+    const t=(ts-t0)/1000;
+    gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform1f(uT,t);
+    gl.uniform2f(uR,canvas.width,canvas.height);
+    gl.uniform2f(uM,mx,my);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    requestAnimationFrame(draw);
+  };
+  requestAnimationFrame(draw);
+})();
+
+/* =============================================
+   SECTION 2 — BUILT DIFFERENT anim
+============================================= */
+gsap.from('#built-txt',{
+  opacity:0,scale:0.82,duration:1.3,ease:'power3.out',
+  scrollTrigger:{trigger:'#s2-built',start:'top 65%'}
+});
+
+/* =============================================
+   SECTION 3 — 3D IMAGE PARALLAX & FLOAT
+============================================= */
+const img3D = document.getElementById('s3-3d-img');
+
+// Floating animation
+gsap.to(img3D, {
+  y: -18, duration: 2.8, ease:'sine.inOut',
+  yoyo:true, repeat:-1,
+});
+
+// Parallax on scroll
+gsap.to(img3D, {
+  y: -120,
+  ease:'none',
+  scrollTrigger:{
+    trigger:'#s3-split',
+    start:'top top',
+    end:'bottom top',
+    scrub:1.4,
+  }
+});
+
+// Mouse parallax on the 3D image
+let img3dMX=0,img3dMY=0,img3dCX=0,img3dCY=0;
+document.addEventListener('mousemove',e=>{
+  img3dMX=(e.clientX/window.innerWidth-0.5)*20;
+  img3dMY=(e.clientY/window.innerHeight-0.5)*12;
+});
+(function animImg3D(){
+  img3dCX+=(img3dMX-img3dCX)*0.06;
+  img3dCY+=(img3dMY-img3dCY)*0.06;
+  gsap.set(img3D,{rotateY:img3dCX,rotateX:-img3dCY,transformPerspective:800});
+  requestAnimationFrame(animImg3D);
+})();
+
+// Fade in animations
+gsap.from('.s3-desc',{opacity:0,x:-50,duration:1,scrollTrigger:{trigger:'#s3-split',start:'top 60%'}});
+gsap.from('.s3-left .btn-lime',{opacity:0,y:20,duration:.9,delay:.2,scrollTrigger:{trigger:'#s3-split',start:'top 60%'}});
+gsap.from('.s3-headline',{opacity:0,x:70,duration:1.1,scrollTrigger:{trigger:'#s3-split',start:'top 60%'}});
+
+/* =============================================
+   SECTION 4 — SERVICES: Dashed circle canvas
+   + 3D image float
+============================================= */
+(function initDashedCircle(){
+  const canvas = document.getElementById('svc-dashed-canvas');
+  const wrap   = document.getElementById('svc-wheel');
+
+  const resize = () => {
+    canvas.width  = wrap.offsetWidth;
+    canvas.height = wrap.offsetHeight;
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  let angle = 0;
+  const draw = () => {
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const cx = w/2, cy = h/2;
+    const r  = Math.min(w,h) * 0.45;
+
+    ctx.clearRect(0,0,w,h);
+
+    // Dashed circle
+    ctx.save();
+    ctx.strokeStyle = '#7FFF00';
+    ctx.lineWidth   = 1.5;
+    ctx.setLineDash([6,6]);
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Crosshair lines
+    ctx.save();
+    ctx.strokeStyle = 'rgba(127,255,0,0.35)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([]);
+    // vertical
+    ctx.beginPath();ctx.moveTo(cx,cy-r-10);ctx.lineTo(cx,cy+r+10);ctx.stroke();
+    // horizontal
+    ctx.beginPath();ctx.moveTo(cx-r-10,cy);ctx.lineTo(cx+r+10,cy);ctx.stroke();
+    ctx.restore();
+
+    // Tick marks (rotating)
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(angle);
+    for(let i=0;i<12;i++){
+      const a=(i/12)*Math.PI*2;
+      const x1=Math.cos(a)*r;
+      const y1=Math.sin(a)*r;
+      const x2=Math.cos(a)*(r+10);
+      const y2=Math.sin(a)*(r+10);
+      ctx.strokeStyle='rgba(127,255,0,0.6)';
+      ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    }
+    ctx.restore();
+
+    angle += 0.003;
+    requestAnimationFrame(draw);
+  };
+  draw();
+})();
+
+// Float the services 3D image
+const svcImg = document.getElementById('svc-3d-img');
+gsap.to(svcImg,{y:-14,duration:3,ease:'sine.inOut',yoyo:true,repeat:-1});
+
+// Mouse parallax on services image
+let svcMX=0,svcMY=0,svcCX=0,svcCY=0;
+document.addEventListener('mousemove',e=>{
+  svcMX=(e.clientX/window.innerWidth-0.5)*18;
+  svcMY=(e.clientY/window.innerHeight-0.5)*10;
+});
+(function animSvc(){
+  svcCX+=(svcMX-svcCX)*0.05;
+  svcCY+=(svcMY-svcCY)*0.05;
+  gsap.set(svcImg,{rotateY:svcCX,rotateX:-svcCY,transformPerspective:600});
+  requestAnimationFrame(animSvc);
+})();
+
+gsap.from('.s4-title',{opacity:0,y:40,duration:1,scrollTrigger:{trigger:'#s4-services',start:'top 65%'}});
+
+/* =============================================
+   SECTION 5 — FEATURED WORK SLIDER
+============================================= */
+let curSlide=0;
+const TOTAL=4;
+const fwTrack=document.getElementById('fw-track');
+const fwDots=document.querySelectorAll('.fw-ctrl-dot');
+
+const goSlide=n=>{
+  curSlide=Math.max(0,Math.min(n,TOTAL-1));
+  gsap.to(fwTrack,{x:-(curSlide*window.innerWidth),duration:.88,ease:'power3.inOut'});
+  fwDots.forEach((d,i)=>d.classList.toggle('on',i===curSlide));
+};
+
+fwDots.forEach(d=>d.addEventListener('click',()=>goSlide(+d.dataset.idx)));
+
+let fwAuto=setInterval(()=>goSlide((curSlide+1)%TOTAL),4500);
+
+let fwTX=0;
+fwTrack.addEventListener('touchstart',e=>{fwTX=e.touches[0].clientX;},{passive:true});
+fwTrack.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-fwTX;
+  if(dx<-50)goSlide(curSlide+1);
+  if(dx>50) goSlide(curSlide-1);
+  clearInterval(fwAuto);
+});
+
+window.addEventListener('resize',()=>gsap.set(fwTrack,{x:-(curSlide*window.innerWidth)}));
+
+gsap.from('.fw-heading',{opacity:0,scale:.88,duration:1,scrollTrigger:{trigger:'#s5-work',start:'top 65%'}});
+
+/* =============================================
+   SECTION 6 — PROCESS SVG CONNECTORS
+============================================= */
+function drawProcSVG(){
+  const svg  = document.getElementById('proc-svg');
+  const wrap = document.getElementById('proc-wrap');
+  if(!svg||!wrap)return;
+  const wR = wrap.getBoundingClientRect();
+  svg.setAttribute('viewBox',`0 0 ${wrap.offsetWidth} ${wrap.offsetHeight}`);
+  svg.innerHTML='';
+
+  const gd=id=>{
+    const el=document.getElementById(id);
+    if(!el)return null;
+    const r=el.getBoundingClientRect();
+    return{x:r.left-wR.left+r.width/2,y:r.top-wR.top+r.height/2};
+  };
+
+  const pairs=[
+    ['pnd-r','pnc-l'],
+    ['pnd-r','pnds-l'],
+    ['pnc-b','pnds-t'],
+    ['pnds-b','pndv-t'],
+    ['pnds-r','pnp-l'],
+    ['pndv-r','pnp-l'],
+    ['pnp-r','pnl-l'],
+  ];
+
+  pairs.forEach(([a,b])=>{
+    const pa=gd(a),pb=gd(b);
+    if(!pa||!pb)return;
+    const mx=(pa.x+pb.x)/2,my=(pa.y+pb.y)/2;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${pa.x},${pa.y} C${mx},${pa.y} ${mx},${pb.y} ${pb.x},${pb.y}`);
+    path.setAttribute('stroke','rgba(0,0,0,0.15)');
+    path.setAttribute('stroke-width','1.5');
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke-dasharray','5 5');
+    svg.appendChild(path);
+  });
+}
+setTimeout(drawProcSVG,500);
+window.addEventListener('resize',()=>setTimeout(drawProcSVG,200));
+
+gsap.from('.proc-main-title',{opacity:0,y:40,duration:1,scrollTrigger:{trigger:'#s6-process',start:'top 65%'}});
+gsap.from('.proc-node',{opacity:0,y:32,stagger:.1,duration:.8,scrollTrigger:{trigger:'.proc-flow',start:'top 80%'}});
+
+/* =============================================
+   SECTION 7 — CTA ANIMATIONS
+============================================= */
+gsap.from('.cta-big',{opacity:0,x:-60,duration:1.1,scrollTrigger:{trigger:'#s7-cta',start:'top 65%'}});
+gsap.from('.cta-rhs',{opacity:0,x:60,duration:1.1,delay:.1,scrollTrigger:{trigger:'#s7-cta',start:'top 65%'}});
+
+/* =============================================
+   MAGNETIC BUTTONS
+============================================= */
+document.querySelectorAll('.btn-lime,.btn-black,.fnav-contact').forEach(btn=>{
+  btn.addEventListener('mousemove',e=>{
+    const r=btn.getBoundingClientRect();
+    const dx=e.clientX-r.left-r.width/2;
+    const dy=e.clientY-r.top-r.height/2;
+    gsap.to(btn,{x:dx*.22,y:dy*.22,duration:.4,ease:'power2.out'});
+  });
+  btn.addEventListener('mouseleave',()=>{
+    gsap.to(btn,{x:0,y:0,duration:.6,ease:'elastic.out(1,.4)'});
+  });
+});
+
+</script>
+</body>
+</html>
